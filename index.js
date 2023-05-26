@@ -7,43 +7,39 @@ require('dotenv').config();
 
 app.use(cors());
 app.use(express.static('public'));
-app.get('/', (req, res) => {
-  res.sendFile(__dirname + '/views/index.html');
-});
+app.get('/', (req, res) => res.sendFile(__dirname + '/views/index.html'));
 
 app.use(bodyParser.json())
-  .use(bodyParser.urlencoded({
-    extended: false
-  }));
+  .use(bodyParser.urlencoded({ extended: false }));
 
-  mongoose.connect(process.env.MONGO_URI, { useNewUrlParser: true, useUnifiedTopology: true});
+mongoose.connect(process.env.MONGO_URI, { useNewUrlParser: true, useUnifiedTopology: true});
 
-  const userSchema = new mongoose.Schema({
-    username: {
-      type: String,
-      required: true,
-      unique: true
-    }
-  });
+const userSchema = new mongoose.Schema({
+  username: {
+    type: String,
+    required: true,
+    unique: true
+  }
+});
 
-  const exerciseSchema = new mongoose.Schema({
-    _uid: {
-      type: String,
-      required: true
-    },
-    description: {
-      type: String,
-      required: true
-    },
-    duration: {
-      type: Number,
-      required: true
-    },
-    date: {
-      type: Date,
-      required: true
-    }
-  });
+const exerciseSchema = new mongoose.Schema({
+  _uid: {
+    type: String,
+    required: true
+  },
+  description: {
+    type: String,
+    required: true
+  },
+  duration: {
+    type: Number,
+    required: true
+  },
+  date: {
+    type: Date,
+    required: true
+  }
+});
 
 const User = mongoose.model("User", userSchema);
 
@@ -59,16 +55,6 @@ const findUserByID = async function(input) {
   }
 };
 
-const findUserByName = async function() {
-  try {
-    let findAUser = await User.find({ username: req.body.username })
-    return findAUser
-  }
-  catch (error) {
-    console.log(error)
-  }
-};
-
 app.post("/api/users", (req, res) => {
   async function findUser() {
     const findUser = await User.find({ username: req.body.username })
@@ -78,28 +64,12 @@ app.post("/api/users", (req, res) => {
       let findUserAgain = await User.find({ username: req.body.username })
       return findUserAgain;
     }
-    else {
-      return findUser
-    };
+    else return findUser;
   };
 
-  findUser().then(
-    findUser => res.json({ username: req.body.username, "_id": findUser[0]._id })
-  )
-  .catch(
-    error => console.log(error)
-  );
+  findUser().then(findUser => res.json({ username: req.body.username, "_id": findUser[0]._id }))
+  .catch(error => console.log(error));
 });
-
-/*app.get("/api/cleardb", (req, res) => {
-  async function deletion () {
-    let deletion = await Exercise.deleteMany({ _uid: '646ef17ba49cb583da3cafad' })
-    console.log(deletion)
-  }
-  deletion().then(
-    res.json({ status: "removed" })
-  )
-});*/
 
 app.post("/api/users/:_id/exercises", (req, res) => {
   async function inputExercise() {
@@ -121,10 +91,9 @@ app.post("/api/users/:_id/exercises", (req, res) => {
   };
 
   inputExercise().then(
-    results => {
-      res.json({ _id: results._id, username: results.username, date: results.date, duration: results.duration, description: results.description })
-    }
-  ).catch(
+    results => res.json({ _id: results._id, username: results.username, date: results.date, duration: results.duration, description: results.description })
+    )
+    .catch(
     error => console.log(error)
   );
 });
@@ -137,9 +106,7 @@ app.get("/api/users/:_id/logs?", (req, res) => {
       responseObject._id = req.params._id;
       responseObject.username = user[0].username;
       let queryObject = {};
-      if (!req.query.from && !req.query.to){
-        queryObject = { _uid: user[0]._id};
-      }
+      if (!req.query.from && !req.query.to) queryObject = { _uid: user[0]._id};
       else if ((req.query.from.length > 0) && (!req.query.to)) {
         let newFromDate = new Date (req.query.from);
         queryObject = { _uid: user[0]._id, date: { $gte: newFromDate }};
@@ -152,9 +119,7 @@ app.get("/api/users/:_id/logs?", (req, res) => {
       let findLogs = await Exercise.find(queryObject, { "__v": 0, "_id": 0, "_uid": 0 });
       responseObject.count = findLogs.length;
       responseObject.log = findLogs;
-      if (req.query.limit > 0) {
-        responseObject.log.splice(req.query.limit);
-      }
+      if (req.query.limit > 0) responseObject.log.splice(req.query.limit);
       return responseObject;
     }
     catch (error) {
