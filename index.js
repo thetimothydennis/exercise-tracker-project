@@ -117,6 +117,16 @@ app.post("/api/users", (req, res) => {
   .catch(error => console.log(error));
 });
 
+app.get("/api/users", (req, res) => {
+  async function findAllUsers() {
+    let allUsers = await User.find({}, { "__v": 0 })
+    return allUsers
+  }
+  findAllUsers().then(
+    results => res.json({ results: results })
+  )
+})
+
 app.post("/api/users/:_id/exercises", (req, res) => {
   inputExercise(req).then(
     results => res.json({ _id: results._id, username: results.username, date: results.date, duration: results.duration, description: results.description })
@@ -126,7 +136,7 @@ app.post("/api/users/:_id/exercises", (req, res) => {
   );
 });
 
-app.get("/api/users/:_id/logs?", (req, res) => {
+app.get("/api/users/:_id/logs", (req, res) => {
   getLogs(req).then(
     results => {
       res.json({ _id: results._id, username: results.username, count: results.count, log: results.log })
